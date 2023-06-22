@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
+import postLocation from '../../api/api';
 
 /**
  * The unique key of the location storage.
@@ -32,6 +33,11 @@ export async function addLocation(location: LocationObject): Promise<LocationObj
   const locations = [...existing, location];
   await setLocations(locations);
   console.log('[storage]', 'added location -', locations.length, 'stored locations');
+  if (locations.length >= 20 || locations.length >= 1 && location.timestamp - locations[0].timestamp >= 60 * 1000 * 5) {
+    postLocation(locations).then(() => {
+      clearLocations();
+    });
+  }
   return locations;
 }
 

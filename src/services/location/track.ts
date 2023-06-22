@@ -1,6 +1,8 @@
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 
+import postLocation from '../../api/api';
+
 import { addLocation } from './storage';
 
 /**
@@ -56,6 +58,9 @@ TaskManager.defineTask(locationTaskName, async (event) => {
   }
 
   const locations = (event.data as any).locations as Location.LocationObject[];
+  locations.forEach((location) => {
+    console.log('[tracking]', 'Sending new location to the server', location);
+  });
   console.log('[tracking]', 'Received new locations', locations);
 
   try {
