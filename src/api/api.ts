@@ -8,7 +8,7 @@ async function postLocation(locations : LocationObject[]): Promise<any> {
     console.log("[api] Posting: " + dataToSend);
 
     //POST request
-    return fetch('https://geolog.azurewebsites.net/api/ClientTrigger?code='+process.env.REACT_APP_AZ_FUNC_CODE, {
+    return fetch('https://geolog.azurewebsites.net/api/GetLogs?code='+process.env.REACT_APP_AZ_FUNC_CODE, {
         method: 'POST', //Request Type
         body: dataToSend, //post body
         headers: {
