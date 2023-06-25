@@ -16,6 +16,11 @@
         "resourceClass": "m-medium"
       }
     },
+    "preview2": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "production": {
       "ios": {
         "resourceClass": "m-medium"
