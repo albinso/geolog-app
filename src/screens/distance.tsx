@@ -4,16 +4,18 @@ import { FlatList } from 'react-native';
 
 import { Box, Button, Paragraph, Title } from '../providers/theme';
 import { useLocationData, useLocationDistance, useLocationTracking } from '../services/location';
+import { useNightmode } from '../services/look';
 
 export function DistanceScreen() {
   const locations = useLocationData();
   const tracking = useLocationTracking();
   const distance = useLocationDistance(locations);
+  const nightmode = useNightmode();
 
   return (
-    <Box variant='page'>
+    <Box variant='page' >
       <Box>
-        <Title>Your office marathon</Title>
+        <Title style={nightmode.getStyles()}>Your office marathon</Title>
         {distance === 0
           ? <Paragraph>You didn't walk yet, start the location tracking and start walking.</Paragraph>
           : <Paragraph>You walked {distance} meters! Keep it up!</Paragraph>
@@ -25,6 +27,10 @@ export function DistanceScreen() {
           : <Button onPress={tracking.startTracking}>Start tracking</Button>
         }
         <Button variant='primary' onPress={tracking.clearTracking}>Reset data</Button>
+        {nightmode.nightmode
+          ? <Button onPress={nightmode.toggleNightmode}>Disable nightmode</Button> 
+          : <Button onPress={nightmode.toggleNightmode}>Enable nightmode</Button>
+        }
       </Box>
       <DistanceLocationList locations={locations} />
     </Box>
