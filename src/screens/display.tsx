@@ -28,11 +28,6 @@ export function DisplayScreen({ navigation }: DisplayScreenProps) {
       <Box>
         <Title>Your office marathon</Title>
         <Title>{status}</Title>
-        <DateTimePicker value={new Date()} onChange={e => {
-          console.log(e.target.value);
-          setStart(new Date(e.target.value).getTime());
-        }} />
-        <DateTimePicker value={new Date()} onChange={e => setEnd(new Date(e.target.value).getTime())} />
         <TextInput value={num.toString()} onChangeText={e => {
           console.log("num: " + e);
           if (e == "") {
