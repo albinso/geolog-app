@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchLocations } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { set } from 'react-native-reanimated';
+import { Platform } from 'react-native';
 
 export function useLocations({ timeRange, latitudeRange, longitudeRange, num }) {
     const cache = useRef({});
@@ -32,11 +34,11 @@ export function useLocations({ timeRange, latitudeRange, longitudeRange, num }) 
                 console.log("Already loading!");
                 return;
             }
-            while(initializing.current) {
+            while (initializing.current) {
                 console.log("Waiting for initialization");
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
-                
+
             console.log("Update location with " + timeRange + " " + latitudeRange + " " + longitudeRange + " " + num);
             console.log("Cache: " + JSON.stringify(cache));
             setStatus('loading');
@@ -59,7 +61,7 @@ export function useLocations({ timeRange, latitudeRange, longitudeRange, num }) 
                 setData(locations);
                 setStatus('fetched');
                 cache.current[cacheKey] = locations;
-                localStorage.setItem('locationsCache', JSON.stringify(cache.current));
+                saveCache(cache);
                 setAllowUpdate(false);
             });
         };
@@ -71,16 +73,30 @@ export function useLocations({ timeRange, latitudeRange, longitudeRange, num }) 
             return;
         }
         initializing.current = false;
-        let loadedCache = localStorage.getItem('locationsCache');
-        if (loadedCache) {
-            cache.current = JSON.parse(loadedCache);
-        }
+        loadCache().then(loadedCache => {
+            if (loadedCache) {
+                console.log("Loaded cache: " + JSON.stringify(loadedCache));
+                cache.current = JSON.parse(loadedCache);
+            }
+        });
     }, []);
-
-
-
-
 
     return { status, data, updateFunc, updateNoCache };
 
 }
+async function loadCache() {
+    if (Platform.OS === 'web') {
+        return Promise.resolve(localStorage.getItem('locationsCache'));
+    } else {
+        return await AsyncStorage.getItem('locationsCache');
+    }
+}
+
+async function saveCache(cache) {
+    if (Platform.OS === 'web') {
+        localStorage.setItem('locationsCache', JSON.stringify(cache.current));
+    } else {
+        await AsyncStorage.setItem('locationsCache', JSON.stringify(cache.current));
+    }
+}
+
