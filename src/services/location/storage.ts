@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
-import postLocation from '../../api/api';
+import { postLocation } from '../../api/api';
 
 /**
  * The unique key of the location storage.

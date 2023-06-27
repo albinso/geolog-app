@@ -1,7 +1,7 @@
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 
-import postLocation from '../../api/api';
+import { postLocation } from '../../api/api';
 
 import { addLocation } from './storage';
 
