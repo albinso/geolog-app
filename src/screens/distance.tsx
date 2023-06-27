@@ -3,10 +3,14 @@ import { useEffect, useRef } from 'react';
 import { FlatList } from 'react-native';
 
 import { Box, Button, Paragraph, Title } from '../providers/theme';
+import { StackScreenProps } from '@react-navigation/stack';
+import { StackParamList } from '../providers/navigation';
 import { useLocationData, useLocationDistance, useLocationTracking } from '../services/location';
 import { useNightmode } from '../services/look';
 
-export function DistanceScreen() {
+type DistanceScreenProps = StackScreenProps<StackParamList, 'Onboarding'>;
+
+export function DistanceScreen({ navigation }: DistanceScreenProps) {
   const locations = useLocationData();
   const tracking = useLocationTracking();
   const distance = useLocationDistance(locations);
@@ -27,6 +31,7 @@ export function DistanceScreen() {
           : <Button onPress={tracking.startTracking}>Start tracking</Button>
         }
         <Button variant='primary' onPress={tracking.clearTracking}>Reset data</Button>
+        <Button variant='primary' onPress={() => navigation.navigate('Display')}>Map</Button>
         {nightmode.nightmode
           ? <Button onPress={nightmode.toggleNightmode}>Disable nightmode</Button> 
           : <Button onPress={nightmode.toggleNightmode}>Enable nightmode</Button>

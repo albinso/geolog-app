@@ -3,10 +3,12 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import { DistanceScreen } from '../screens/distance';
 import { OnboardingScreen } from '../screens/onboarding';
+import { DisplayScreen } from '../screens/display';
 
 export type StackParamList = {
   Onboarding: undefined;
   Distance: undefined;
+  Display: undefined;
 };
 
 const Stack = createStackNavigator<StackParamList>();
@@ -17,6 +19,7 @@ export function NavigationProvider() {
       <Stack.Navigator initialRouteName="Onboarding" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Distance" component={DistanceScreen} />
+        <Stack.Screen name="Display" component={DisplayScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

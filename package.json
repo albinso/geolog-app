@@ -12,11 +12,12 @@
   },
   "dependencies": {
     "@expo-google-fonts/open-sans": "^0.2.3",
-    "@expo/webpack-config": "^18.0.1",
+    "@expo/webpack-config": "^18.1.0",
     "@react-native-async-storage/async-storage": "1.17.11",
+    "@react-native-community/datetimepicker": "6.7.3",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/stack": "^6.3.16",
-    "dripsy": "^3.10.0",
+    "dripsy": "^4.3.3",
     "expo": "^48.0.7",
     "expo-constants": "~14.2.1",
     "expo-font": "~11.1.1",
@@ -41,8 +42,15 @@
     "@babel/core": "^7.21.3",
     "@types/react": "~18.0.27",
     "@types/react-dom": "~18.0.10",
+    "tsconfig-paths": "^4.2.0",
+    "tsconfig-paths-webpack-plugin": "^4.0.1",
     "typescript": "^4.9.5"
   },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
   "jest": {
     "preset": "jest-expo",
     "setupFiles": [
