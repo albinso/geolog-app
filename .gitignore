@@ -10,5 +10,8 @@ npm-debug.*
 *.lock
 web-build/
 
+.env.local
+.git-history-update
+
 # macOS
 .DS_Store
