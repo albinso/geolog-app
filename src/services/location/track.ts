@@ -8,7 +8,7 @@ import { addLocation } from './storage';
 /**
  * The unique name of the background location task.
  */
-export const locationTaskName = 'office-marathon';
+export const locationTaskName = 'geolog';
 
 /**
  * Check if the background location is started and running.
@@ -18,22 +18,37 @@ export async function isTracking(): Promise<boolean> {
   return await Location.hasStartedLocationUpdatesAsync(locationTaskName);
 }
 
+export async function requestForegroundPermissions(): Promise<boolean> {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  return status === Location.PermissionStatus.GRANTED;
+}
+
+export async function requestBackgroundPermissions(): Promise<boolean> {
+  const { status } = await Location.requestBackgroundPermissionsAsync();
+  return status === Location.PermissionStatus.GRANTED;
+}
+
 /**
  * Start the background location monitoring and add new locations to the storage.
  * This is a wrapper around `Location.startLocationUpdatesAsync` with the task name prefilled.
  */
 export async function startTracking() {
+  const status = requestBackgroundPermissions();
+  if (status) {
+    throw new Error('Location permission not granted');
+  }
   await Location.startLocationUpdatesAsync(locationTaskName, {
     accuracy: Location.Accuracy.BestForNavigation,
     timeInterval: 15 * 1000,
     // android behavior
     foregroundService: {
-      notificationTitle: 'Office marathon is active',
-      notificationBody: 'Monitoring your location to measure total distance',
+      notificationTitle: 'GeoLog is active',
+      notificationBody: 'Monitoring your location',
       notificationColor: '#333333',
     },
     // ios behavior
     activityType: Location.ActivityType.Fitness,
+
     showsBackgroundLocationIndicator: true,
   });
   console.log('[tracking]', 'started background location task');
