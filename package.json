@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@bycedric/office-marathon",
+  "name": "@albinso/geolog",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
