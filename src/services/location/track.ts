@@ -33,10 +33,6 @@ export async function requestBackgroundPermissions(): Promise<boolean> {
  * This is a wrapper around `Location.startLocationUpdatesAsync` with the task name prefilled.
  */
 export async function startTracking() {
-  const status = requestBackgroundPermissions();
-  if (status) {
-    throw new Error('Location permission not granted');
-  }
   await Location.startLocationUpdatesAsync(locationTaskName, {
     accuracy: Location.Accuracy.BestForNavigation,
     timeInterval: 15 * 1000,
