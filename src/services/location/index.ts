@@ -86,9 +86,9 @@ export function useLocationData(interval = 3000) {
 
   useEffect(() => {
     // load the locations on first render
-    Storage.getLocations().then(onLocations);
+    Storage.getLocations().then(sls => onLocations(sls.map(sl => sl.plaintext)));
     // create a timer to poll for changes
-    const timerId = window.setInterval(() => Storage.getLocations().then(onLocations), interval);
+    const timerId = window.setInterval(() => Storage.getLocations().then(sls => onLocations(sls.map(sl => sl.plaintext))), interval);
     // when the hook is unmounted, remove the timer
     return () => window.clearInterval(timerId);
   }, [interval]);

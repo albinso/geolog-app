@@ -7,6 +7,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { StackParamList } from '../providers/navigation';
 import { useLocationData, useLocationDistance, useLocationTracking } from '../services/location';
 import { useNightmode } from '../services/look';
+import { setEncryptionKey } from '../services/keyservice';
 
 type DistanceScreenProps = StackScreenProps<StackParamList, 'Onboarding'>;
 
@@ -30,6 +31,7 @@ export function DistanceScreen({ navigation }: DistanceScreenProps) {
           ? <Button onPress={tracking.stopTracking}>Stop tracking</Button>
           : <Button onPress={tracking.startTracking}>Start tracking</Button>
         }
+        <Button variant='primary' onPress={e => setEncryptionKey(null)}>Clear key</Button>
         <Button variant='primary' onPress={tracking.clearTracking}>Reset data</Button>
         <Button variant='primary' onPress={() => navigation.navigate('Display')}>Map</Button>
         {nightmode.nightmode

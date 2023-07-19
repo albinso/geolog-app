@@ -1,17 +1,22 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 import { postLocation } from '../../api/api';
+import { EncryptedLocation, encryptLocation } from '../encryptservice';
 
 /**
  * The unique key of the location storage.
  */
 export const locationStorageName = 'locations';
 
+type StoredLocation = {
+  encrypted: EncryptedLocation,
+  plaintext: LocationObject,
+}
 /**
  * Get all stored locations from storage.
  * This is a wrapper around AsyncStorage to parse stored JSON.
  */
-export async function getLocations(): Promise<LocationObject[]> {
+export async function getLocations(): Promise<StoredLocation[]> {
   const data = await AsyncStorage.getItem(locationStorageName);
   return data ? JSON.parse(data) : [];
 }
@@ -20,7 +25,7 @@ export async function getLocations(): Promise<LocationObject[]> {
  * Update the locations in storage.
  * This is a wrapper around AsyncStorage to stringify the JSON.
  */
-export async function setLocations(locations: LocationObject[]): Promise<void> {
+export async function setLocations(locations: StoredLocation[]): Promise<void> {
   await AsyncStorage.setItem(locationStorageName, JSON.stringify(locations));
 }
 
@@ -41,21 +46,21 @@ function deg2rad(deg) {
   return deg * (Math.PI / 180)
 }
 
-export const shouldUse = (location, lastLocationPosted) => {
+export const shouldUse = (location: LocationObject, lastLocationPosted: LocationObject) => {
   if (!lastLocationPosted) {
     return [true, 'No last location'];
   }
   if (!lastLocationPosted.coords || !lastLocationPosted.timestamp) {
     return [true, 'Last location has no coords or timestamp'];
   }
-    
-  let x1 = parseFloat(location.coords.latitude);
-  let y1 = parseFloat(location.coords.longitude);
-  let x2 = parseFloat(lastLocationPosted.coords.latitude);
-  let y2 = parseFloat(lastLocationPosted.coords.longitude);
 
-  let ts1 = parseInt(location.timestamp);
-  let ts2 = parseInt(lastLocationPosted.timestamp);
+  let x1 = location.coords.latitude;
+  let y1 = location.coords.longitude;
+  let x2 = lastLocationPosted.coords.latitude;
+  let y2 = lastLocationPosted.coords.longitude;
+
+  let ts1 = location.timestamp;
+  let ts2 = lastLocationPosted.timestamp;
 
   let d = getDistanceFromLatLonInM(x1, y1, x2, y2);
   console.log('[storage]', 'distance to last point ', d, ' meters');
@@ -78,31 +83,37 @@ export const shouldUse = (location, lastLocationPosted) => {
  * Add a new location to the storage.
  * This is a helper to append a new location to the storage.
  */
-export async function addLocation(location: LocationObject): Promise<LocationObject[]> {
-  const existing = await getLocations();
-  const locations = [...existing, location];
-  const lastLocationPosted = existing[existing.length - 1];
+export async function addLocation(location: LocationObject): Promise<EncryptedLocation[]> {
+  const existing: StoredLocation[] = await getLocations();
+  const locations: LocationObject[] = [...existing.map(sl => sl?.plaintext), location];
+  console.log('[storage] encrypted locations', existing.map(sl => JSON.stringify(sl?.encrypted)));
+  const lastLocationPosted: LocationObject = existing[existing.length - 1]?.plaintext;
   console.log('[storage]', 'last location posted', lastLocationPosted);
   console.log('[storage]', 'current location', location);
   const [shouldUsePoint, cause] = shouldUse(location, lastLocationPosted);
   if (existing.length > 0 && !shouldUsePoint) {
     console.log("[storage] skipped location because: " + cause);
-  } else {
-    console.log("[storage] added location because: " + cause);
-    await setLocations(locations);
-    console.log('[storage]', 'added location -', locations.length, 'stored locations');
+    return;
   }
+  console.log("[storage] added location because: " + cause);
 
+  const encryptedLocation: EncryptedLocation = await encryptLocation(location);
+  const encryptedLocations: EncryptedLocation[] = [...existing.map(sl => sl.encrypted), encryptedLocation];
+  const storage = locations.map((location, index) => ({
+    encrypted: encryptedLocations[index],
+    plaintext: location,
+  }));
+  await setLocations(storage);
+  console.log('[storage]', 'added location -', encryptedLocations.length, 'stored locations');
 
-  if (locations.length >= 20 || locations.length >= 1 && location.timestamp - locations[0].timestamp >= 60 * 1000 * 60) {
-    postLocation(locations).then(() => {
+  if (locations.length >= 20 || locations.length >= 1 && encryptedLocation.location.timestamp - encryptedLocations[0].location.timestamp >= 60 * 1000 * 60) {
+
+    postLocation(encryptedLocations).then(() => {
       clearLocations();
     });
   }
-  return locations;
+  return encryptedLocations;
 }
-
-
 
 /**
  * Reset all stored locations.
