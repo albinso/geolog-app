@@ -1,13 +1,14 @@
-import { LocationObject } from "expo-location";
+
+import { EncryptedLocation } from "@src/services/encryptservice";
 
 const url = 'https://geolog.azurewebsites.net/api/GetLogs';
 //const url = 'http://localhost:7071/api/GetLogs';
 
 
-export async function postLocation(locations : LocationObject[]): Promise<any> {
+export async function postLocation(locations : EncryptedLocation[]): Promise<any> {
     //POST json
     var dataToSend = JSON.stringify(locations.map(location => {
-        return { ...location.coords, timestamp: location.timestamp };
+        return { ...location.location, timestamp: location.location.timestamp, crypto: location.crypto };
     }));
     console.log("[api] Posting: " + dataToSend);
 
