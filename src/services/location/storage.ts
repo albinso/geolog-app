@@ -1,12 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 import { postLocation } from '../../api/api';
+import CryptoES from "crypto-es";
 
 /**
  * The unique key of the location storage.
  */
 export const locationStorageName = 'locations';
+const secretKey = CryptoES.enc.Utf16.parse(process.env.REACT_APP_SECRET_KEY);
 
+export type EncryptionMetadata = {
+  iv: string,
+  algorithm: string,
+  keySize: number,
+}
+
+export type EncryptedLocationObject = {
+  crypto: EncryptionMetadata,
+  location: LocationObject,
+}
 /**
  * Get all stored locations from storage.
  * This is a wrapper around AsyncStorage to parse stored JSON.
@@ -48,7 +60,7 @@ export const shouldUse = (location, lastLocationPosted) => {
   if (!lastLocationPosted.coords || !lastLocationPosted.timestamp) {
     return [true, 'Last location has no coords or timestamp'];
   }
-    
+
   let x1 = parseFloat(location.coords.latitude);
   let y1 = parseFloat(location.coords.longitude);
   let x2 = parseFloat(lastLocationPosted.coords.latitude);
@@ -92,10 +104,35 @@ export async function addLocation(location: LocationObject): Promise<LocationObj
     await setLocations(locations);
     console.log('[storage]', 'added location -', locations.length, 'stored locations');
   }
-
-
   if (locations.length >= 20 || locations.length >= 1 && location.timestamp - locations[0].timestamp >= 60 * 1000 * 60) {
-    postLocation(locations).then(() => {
+
+    const encryptedLocations: EncryptedLocationObject[] = locations.map((oldLocation) => {
+      var iv = CryptoES.lib.WordArray.random(16);
+      var location: EncryptedLocationObject = {
+        crypto: {
+          iv: iv.toString(),
+          algorithm: 'AES',
+          keySize: secretKey.sigBytes * 8,
+        },
+        location: {
+          coords: {
+            latitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.latitude.toString(), secretKey).toString()),
+            longitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.longitude.toString(), secretKey).toString()),
+            altitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.altitude.toString(), secretKey).toString()),
+            accuracy: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.accuracy.toString(), secretKey).toString()),
+            altitudeAccuracy: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.altitudeAccuracy.toString(), secretKey).toString()),
+            heading: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.heading.toString(), secretKey).toString()),
+            speed: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.speed.toString(), secretKey).toString()),
+          },
+          timestamp: oldLocation.timestamp,
+        }
+      };
+      return location;
+    });
+
+
+
+    postLocation(encryptedLocations).then(() => {
       clearLocations();
     });
   }
