@@ -2,13 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 import { postLocation } from '../../api/api';
 import CryptoES from "crypto-es";
+import { getEncryptionKey } from '../keyservice';
 
 /**
  * The unique key of the location storage.
  */
 export const locationStorageName = 'locations';
 console.log("[storage] secret key: " + process.env.REACT_APP_SECRET_KEY);
-const secretKey = CryptoES.enc.Utf16.parse(process.env.REACT_APP_SECRET_KEY);
+
 
 export type EncryptionMetadata = {
   iv: string,
@@ -109,7 +110,7 @@ export async function addLocation(location: LocationObject): Promise<EncryptedLo
   }
   console.log("[storage] added location because: " + cause);
   
-  const encryptedLocation: EncryptedLocation = encryptLocation(location);
+  const encryptedLocation: EncryptedLocation = await encryptLocation(location);
   const encryptedLocations: EncryptedLocation[] = [...existing.map(sl => sl.encrypted), encryptedLocation];
   await setLocations(encryptedLocations);
   console.log('[storage]', 'added location -', encryptedLocations.length, 'stored locations');
@@ -123,8 +124,8 @@ export async function addLocation(location: LocationObject): Promise<EncryptedLo
   return encryptedLocations;
 }
 
-function encryptLocation(oldLocation: LocationObject): EncryptedLocation {
-
+async function encryptLocation(oldLocation: LocationObject): Promise<EncryptedLocation> {
+  let secretKey = await getEncryptionKey();
   var iv = CryptoES.lib.WordArray.random(16);
   var newLoc: EncryptedLocation = {
     crypto: {

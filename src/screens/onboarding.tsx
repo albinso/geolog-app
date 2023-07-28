@@ -11,7 +11,7 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
   const [permission, askPermission] = useForegroundPermissions();
 
   const onContinue = useCallback(() => {
-    navigation.navigate('Distance');
+    navigation.navigate('OnboardingKey');
   }, [navigation]);
 
   useEffect(() => {
