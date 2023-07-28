@@ -7,6 +7,7 @@ import CryptoES from "crypto-es";
  * The unique key of the location storage.
  */
 export const locationStorageName = 'locations';
+console.log("[storage] secret key: " + process.env.REACT_APP_SECRET_KEY);
 const secretKey = CryptoES.enc.Utf16.parse(process.env.REACT_APP_SECRET_KEY);
 
 export type EncryptionMetadata = {
@@ -15,15 +16,20 @@ export type EncryptionMetadata = {
   keySize: number,
 }
 
-export type EncryptedLocationObject = {
+export type EncryptedLocation = {
   crypto: EncryptionMetadata,
   location: LocationObject,
+}
+
+type StoredLocation = {
+  encrypted: EncryptedLocation,
+  plaintext: LocationObject,
 }
 /**
  * Get all stored locations from storage.
  * This is a wrapper around AsyncStorage to parse stored JSON.
  */
-export async function getLocations(): Promise<LocationObject[]> {
+export async function getLocations(): Promise<StoredLocation[]> {
   const data = await AsyncStorage.getItem(locationStorageName);
   return data ? JSON.parse(data) : [];
 }
@@ -32,7 +38,7 @@ export async function getLocations(): Promise<LocationObject[]> {
  * Update the locations in storage.
  * This is a wrapper around AsyncStorage to stringify the JSON.
  */
-export async function setLocations(locations: LocationObject[]): Promise<void> {
+export async function setLocations(locations: EncryptedLocation[]): Promise<void> {
   await AsyncStorage.setItem(locationStorageName, JSON.stringify(locations));
 }
 
@@ -53,7 +59,7 @@ function deg2rad(deg) {
   return deg * (Math.PI / 180)
 }
 
-export const shouldUse = (location, lastLocationPosted) => {
+export const shouldUse = (location : LocationObject, lastLocationPosted : LocationObject) => {
   if (!lastLocationPosted) {
     return [true, 'No last location'];
   }
@@ -61,13 +67,13 @@ export const shouldUse = (location, lastLocationPosted) => {
     return [true, 'Last location has no coords or timestamp'];
   }
 
-  let x1 = parseFloat(location.coords.latitude);
-  let y1 = parseFloat(location.coords.longitude);
-  let x2 = parseFloat(lastLocationPosted.coords.latitude);
-  let y2 = parseFloat(lastLocationPosted.coords.longitude);
+  let x1 = location.coords.latitude;
+  let y1 = location.coords.longitude;
+  let x2 = lastLocationPosted.coords.latitude;
+  let y2 = lastLocationPosted.coords.longitude;
 
-  let ts1 = parseInt(location.timestamp);
-  let ts2 = parseInt(lastLocationPosted.timestamp);
+  let ts1 = location.timestamp;
+  let ts2 = lastLocationPosted.timestamp;
 
   let d = getDistanceFromLatLonInM(x1, y1, x2, y2);
   console.log('[storage]', 'distance to last point ', d, ' meters');
@@ -90,55 +96,57 @@ export const shouldUse = (location, lastLocationPosted) => {
  * Add a new location to the storage.
  * This is a helper to append a new location to the storage.
  */
-export async function addLocation(location: LocationObject): Promise<LocationObject[]> {
-  const existing = await getLocations();
-  const locations = [...existing, location];
-  const lastLocationPosted = existing[existing.length - 1];
+export async function addLocation(location: LocationObject): Promise<EncryptedLocation[]> {
+  const existing : StoredLocation[] = await getLocations();
+  const locations : LocationObject[] = [...existing.map(sl => sl.plaintext), location];
+  const lastLocationPosted : LocationObject= existing[existing.length - 1].plaintext;
   console.log('[storage]', 'last location posted', lastLocationPosted);
   console.log('[storage]', 'current location', location);
   const [shouldUsePoint, cause] = shouldUse(location, lastLocationPosted);
   if (existing.length > 0 && !shouldUsePoint) {
     console.log("[storage] skipped location because: " + cause);
-  } else {
-    console.log("[storage] added location because: " + cause);
-    await setLocations(locations);
-    console.log('[storage]', 'added location -', locations.length, 'stored locations');
+    return;
   }
-  if (locations.length >= 20 || locations.length >= 1 && location.timestamp - locations[0].timestamp >= 60 * 1000 * 60) {
+  console.log("[storage] added location because: " + cause);
+  
+  const encryptedLocation: EncryptedLocation = encryptLocation(location);
+  const encryptedLocations: EncryptedLocation[] = [...existing.map(sl => sl.encrypted), encryptedLocation];
+  await setLocations(encryptedLocations);
+  console.log('[storage]', 'added location -', encryptedLocations.length, 'stored locations');
 
-    const encryptedLocations: EncryptedLocationObject[] = locations.map((oldLocation) => {
-      var iv = CryptoES.lib.WordArray.random(16);
-      var location: EncryptedLocationObject = {
-        crypto: {
-          iv: iv.toString(),
-          algorithm: 'AES',
-          keySize: secretKey.sigBytes * 8,
-        },
-        location: {
-          coords: {
-            latitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.latitude.toString(), secretKey).toString()),
-            longitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.longitude.toString(), secretKey).toString()),
-            altitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.altitude.toString(), secretKey).toString()),
-            accuracy: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.accuracy.toString(), secretKey).toString()),
-            altitudeAccuracy: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.altitudeAccuracy.toString(), secretKey).toString()),
-            heading: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.heading.toString(), secretKey).toString()),
-            speed: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.speed.toString(), secretKey).toString()),
-          },
-          timestamp: oldLocation.timestamp,
-        }
-      };
-      return location;
-    });
-
-
+  if (locations.length >= 20 || locations.length >= 1 && encryptedLocation.location.timestamp - encryptedLocations[0].location.timestamp >= 60 * 1000 * 60) {
 
     postLocation(encryptedLocations).then(() => {
       clearLocations();
     });
   }
-  return locations;
+  return encryptedLocations;
 }
 
+function encryptLocation(oldLocation: LocationObject): EncryptedLocation {
+
+  var iv = CryptoES.lib.WordArray.random(16);
+  var newLoc: EncryptedLocation = {
+    crypto: {
+      iv: iv.toString(),
+      algorithm: 'AES',
+      keySize: secretKey.sigBytes * 8,
+    },
+    location: {
+      coords: {
+        latitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.latitude.toString(), secretKey).toString()),
+        longitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.longitude.toString(), secretKey).toString()),
+        altitude: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.altitude.toString(), secretKey).toString()),
+        accuracy: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.accuracy.toString(), secretKey).toString()),
+        altitudeAccuracy: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.altitudeAccuracy.toString(), secretKey).toString()),
+        heading: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.heading.toString(), secretKey).toString()),
+        speed: parseFloat(CryptoES.AES.encrypt(oldLocation.coords.speed.toString(), secretKey).toString()),
+      },
+      timestamp: oldLocation.timestamp,
+    }
+  };
+  return newLoc;
+}
 
 
 /**
