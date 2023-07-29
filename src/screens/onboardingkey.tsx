@@ -1,10 +1,10 @@
 import { StackScreenProps } from '@react-navigation/stack';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { StackParamList } from '../providers/navigation';
 import { Box, Button, Spinner, Title, Paragraph } from '../providers/theme';
-import { setEncryptionKey, useEncryptionKey } from '../services/keyservice';
-import { TextInput } from 'react-native';
+import { generateEncryptionKey, setEncryptionKey, useEncryptionKey } from '../services/keyservice';
+import CryptoES from 'crypto-es';
 
 
 type OnboardingKeyScreenProps = StackScreenProps<StackParamList, 'OnboardingKey'>;
@@ -12,6 +12,7 @@ type OnboardingKeyScreenProps = StackScreenProps<StackParamList, 'OnboardingKey'
 export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
 
     const [key, err] = useEncryptionKey();
+    const [seedphrase, setSeedphrase] = useState(null);
 
 
     const onContinue = useCallback(() => {
@@ -40,7 +41,7 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
         }
     }, [onContinue, key, err, navigation]);
 
-    if (key) {
+    if (key && seedphrase && seedphrase.length > 0) {
         return (
             <Box variant='page'>
                 <Box>
@@ -48,8 +49,20 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
                     <Paragraph>All set!</Paragraph>
                 </Box>
                 <Button onPress={onContinue}>Let's start!</Button>
+                {seedphrase && <Paragraph>
+                    Seedphrase: {seedphrase}
+                </Paragraph>}
             </Box>
         );
+    }
+
+    const generateKey = (event) => {
+        generateEncryptionKey().then(( a ) => {
+            setEncryptionKey(a.key);
+            setSeedphrase(a.seedphrase);
+            console.log(a.seedphrase);
+            console.log(a.key);
+        });
     }
 
     return (
@@ -58,7 +71,7 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
                 <Title>Encryption key required</Title>
                 <Paragraph>To encrypt location data a key is required</Paragraph>
             </Box>
-            <TextInput onSubmitEditing={saveKey}></TextInput>
+            <Button onPress={generateKey}>Generate key</Button>
         </Box>
     );
 };
