@@ -1,8 +1,8 @@
 import { EncryptedLocation } from "@src/services/location/storage";
 import { LocationObject } from "expo-location";
 
-const url = 'https://geolog.azurewebsites.net/api/GetLogs';
-//const url = 'http://localhost:7071/api/GetLogs';
+//const url = 'https://geolog.azurewebsites.net/api/GetLogs';
+const url = 'http://localhost:7071/api/GetLogs';
 
 
 export async function postLocation(locations : EncryptedLocation[]): Promise<any> {

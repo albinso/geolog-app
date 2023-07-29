@@ -31,8 +31,6 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
     }, [onContinue, key, err, navigation])
 
     useEffect(() => {
-        // Only redirect on first render or permission change,
-        // not when users go back to this screen.
         if (!key && err) {
             alert(err);
             return;
