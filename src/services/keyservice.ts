@@ -33,10 +33,13 @@ export const getEncryptionKey = async (): Promise<CryptoES.lib.WordArray | null>
     return CryptoES.enc.Base64.parse(keystring);
 }
 
-export const generateEncryptionKey = async () => {
-    var seedphrase = CryptoES.lib.WordArray.random(128 / 8).toString(CryptoES.enc.Hex);
-    var key : CryptoES.lib.WordArray = CryptoES.PBKDF2(seedphrase, "", {
+export const generateEncryptionKey = async ( seedphrase = "" ) => {
+    var seed = seedphrase;
+    if ( seed.length == 0 ) {
+        seed = CryptoES.lib.WordArray.random(128 / 8).toString(CryptoES.enc.Hex);
+    }
+    var key : CryptoES.lib.WordArray = CryptoES.PBKDF2(seed, "", {
         keySize: 512 / 32
     });
-    return { seedphrase, key };
+    return { seed, key };
 }

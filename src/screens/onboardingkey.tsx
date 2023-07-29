@@ -5,6 +5,7 @@ import { StackParamList } from '../providers/navigation';
 import { Box, Button, Spinner, Title, Paragraph } from '../providers/theme';
 import { generateEncryptionKey, setEncryptionKey, useEncryptionKey } from '../services/keyservice';
 import CryptoES from 'crypto-es';
+import { TextInput } from 'react-native';
 
 
 type OnboardingKeyScreenProps = StackScreenProps<StackParamList, 'OnboardingKey'>;
@@ -13,6 +14,7 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
 
     const [key, err] = useEncryptionKey();
     const [seedphrase, setSeedphrase] = useState(null);
+    const [update, setUpdate] = useState(false);
 
 
     const onContinue = useCallback(() => {
@@ -41,7 +43,7 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
         }
     }, [onContinue, key, err, navigation]);
 
-    if (key && seedphrase && seedphrase.length > 0) {
+    if (update) {
         return (
             <Box variant='page'>
                 <Box>
@@ -49,7 +51,7 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
                     <Paragraph>All set!</Paragraph>
                 </Box>
                 <Button onPress={onContinue}>Let's start!</Button>
-                {seedphrase && <Paragraph>
+                {seedphrase && <Paragraph selectable={true}>
                     Seedphrase: {seedphrase}
                 </Paragraph>}
             </Box>
@@ -57,10 +59,20 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
     }
 
     const generateKey = (event) => {
+        setUpdate(true);
+        if (seedphrase) {
+            generateEncryptionKey(seedphrase).then(( a ) => {
+                setEncryptionKey(a.key);
+                setSeedphrase(a.seed);
+                console.log(a.seed);
+                console.log(a.key);
+            });
+            return;
+        }
         generateEncryptionKey().then(( a ) => {
             setEncryptionKey(a.key);
-            setSeedphrase(a.seedphrase);
-            console.log(a.seedphrase);
+            setSeedphrase(a.seed);
+            console.log(a.seed);
             console.log(a.key);
         });
     }
@@ -72,6 +84,10 @@ export function OnboardingKeyScreen({ navigation }: OnboardingKeyScreenProps) {
                 <Paragraph>To encrypt location data a key is required</Paragraph>
             </Box>
             <Button onPress={generateKey}>Generate key</Button>
+            <TextInput onChangeText={e => setSeedphrase(e)}></TextInput>
+            {seedphrase && <Paragraph>
+                    Seedphrase: {seedphrase}
+                </Paragraph>}
         </Box>
     );
 };
