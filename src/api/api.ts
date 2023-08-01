@@ -8,7 +8,7 @@ const url = 'http://localhost:7071/api/GetLogs';
 export async function postLocation(locations : EncryptedLocation[]): Promise<any> {
     //POST json
     var dataToSend = JSON.stringify(locations.map(location => {
-        return { ...location.location.coords, timestamp: location.location.timestamp, crypto: location.crypto };
+        return { ...location.location, timestamp: location.location.timestamp, crypto: location.crypto };
     }));
     console.log("[api] Posting: " + dataToSend);
 

@@ -22,14 +22,16 @@ export const useEncryptionKey = () => {
 }
 
 export const setEncryptionKey = async (key: CryptoES.lib.WordArray): Promise<void> => {
+    console.log("[keyservice] saving secret key: " + key);
     if(!key) {
         return SecureStore.deleteItemAsync(keystorageName);
     }
     return SecureStore.setItemAsync(keystorageName, key.toString(CryptoES.enc.Base64));
 }
 
-export const getEncryptionKey = async (): Promise<CryptoES.lib.WordArray | null> => {
+export async function getEncryptionKey(): Promise<CryptoES.lib.WordArray | null>  {
     const keystring = await SecureStore.getItemAsync(keystorageName);
+    console.log("[keyservice] secret key: " + keystring);
     return CryptoES.enc.Base64.parse(keystring);
 }
 

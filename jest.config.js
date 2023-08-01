@@ -10,7 +10,8 @@ module.exports = {
         }]
     },
     testMatch: [
-        "**/?(*.)+(spec|test).ts?(x)"
+        "**/?(*.)+(spec|test).ts?(x)",
+        "**/__test__/**"
     ],
     collectCoverageFrom: [
         "**/*.{ts,tsx}",
