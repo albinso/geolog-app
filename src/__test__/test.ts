@@ -92,7 +92,5 @@ describe("shouldUse", () => {
         expect(dist).toBeGreaterThan(10);
     });
 
-
-
 });
 

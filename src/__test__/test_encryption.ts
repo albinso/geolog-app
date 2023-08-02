@@ -1,8 +1,7 @@
 import { LocationObject } from "expo-location";
-import { shouldUse, getDistanceFromLatLonInM } from "../services/location/storage";
-import { decryptLocation, encryptLocation } from "../services/location/storage";
 import * as keyservice from "../services/keyservice";
 import CryptoES from "crypto-es";
+import { decryptLocation, encryptLocation } from "../services/encryptservice";
 
 var spy;
 
@@ -17,9 +16,6 @@ describe("shouldUse", () => {
     });
 
     it("reversing encryption should return input", () => {
-
-
-
 
         let location: LocationObject = {
             coords: {
@@ -44,7 +40,7 @@ describe("shouldUse", () => {
     });
 
     it("testencryptdecrypt", async () => {
-        return;
+        
         let secretKey = await keyservice.getEncryptionKey();
         let iv = CryptoES.lib.WordArray.random(16);
         let prevalue = 55;
