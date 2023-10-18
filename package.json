@@ -22,7 +22,7 @@
     "dripsy": "^4.3.3",
     "expo": "^48.0.7",
     "expo-constants": "~14.2.1",
-    "expo-font": "~11.1.1",
+    "expo-font": "~11.6.0",
     "expo-location": "~15.1.1",
     "expo-secure-store": "^12.3.1",
     "expo-splash-screen": "~0.18.2",
