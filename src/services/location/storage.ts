@@ -75,6 +75,10 @@ export const shouldUse = (location: LocationObject, lastLocationPosted: Location
   if (d < 10 && t < 3600) { // should be equivalent to ~10m
     return [false, 'Distance to last point less than 10 meters and time less than 1 hour'];
   }
+
+  if (t < 300 && d < 10 + location.coords.accuracy) {
+    return [false, 'Time less than 5 minutes and distance less than 10 meters + one standard deviation'];
+  }
   return [true, 'No conditions met to skip point'];
 
 }
