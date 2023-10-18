@@ -17,7 +17,7 @@
     "@react-native-community/datetimepicker": "^6.7.3",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/stack": "^6.3.16",
-    "assert": "^2.0.0",
+    "assert": "^2.1.0",
     "crypto-es": "^1.2.7",
     "dripsy": "^4.3.3",
     "expo": "^48.0.7",
